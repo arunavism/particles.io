@@ -146,7 +146,7 @@
 
     <script>
         const PARTICLE_COUNT = 15000;
-        const apiKey = ""; 
+        const apiKey = "AIzaSyDj8WUKv3x96u_yQ9vGoBrMpGodsCsvJK8"; 
         const INTERACTION_RADIUS = 30;
         const PINCH_THRESHOLD = 0.06;
         
@@ -223,7 +223,6 @@
             const col = new Float32Array(PARTICLE_COUNT * 3);
 
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                // Random start
                 pos[i*3] = (Math.random()-0.5)*100;
                 pos[i*3+1] = (Math.random()-0.5)*100;
                 pos[i*3+2] = (Math.random()-0.5)*100;
@@ -286,13 +285,11 @@
             const posAttr = geometry.attributes.position;
             const arr = posAttr.array;
 
-            // Target Point for interaction
             let attractor = isHandDetected ? handPos : new THREE.Vector3(mouse.x*40, mouse.y*40, 0);
 
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const idx = i*3;
                 
-                // Rotational movement
                 const cosT = Math.cos(time * 0.2);
                 const sinT = Math.sin(time * 0.2);
                 
@@ -300,7 +297,6 @@
                 let ty = targetPositions[idx+1] * expansionFactor;
                 let tz = (targetPositions[idx] * sinT + targetPositions[idx+2] * cosT) * expansionFactor;
 
-                // Physics logic
                 const dx = attractor.x - arr[idx];
                 const dy = attractor.y - arr[idx+1];
                 const dz = attractor.z - arr[idx+2];
@@ -310,13 +306,11 @@
                 if(distSq < INTERACTION_RADIUS * INTERACTION_RADIUS) {
                     const dist = Math.sqrt(distSq);
                     const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
-                    // Attraction + Swirl
                     fx = -dx * force * 0.2 + dy * force * 0.2; 
                     fy = -dy * force * 0.2 - dx * force * 0.2;
                     fz = -dz * force * 0.2;
                 }
 
-                // Smooth movement towards target
                 arr[idx] += (tx - arr[idx] + fx) * 0.05;
                 arr[idx+1] += (ty - arr[idx+1] + fy) * 0.05;
                 arr[idx+2] += (tz - arr[idx+2] + fz) * 0.05;
@@ -340,7 +334,6 @@
                         
                         handPos.set((0.5 - indexTip.x) * 70, (0.5 - indexTip.y) * 70, 0);
 
-                        // Pinch Detection
                         const d = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
                         if (d < PINCH_THRESHOLD) {
                             if (!isPinching && Date.now() - lastPinchTime > 1000) {
@@ -352,7 +345,6 @@
                             isPinching = false;
                         }
 
-                        // Expansion
                         if(res.multiHandLandmarks.length === 2) {
                             const h1 = res.multiHandLandmarks[0][9];
                             const h2 = res.multiHandLandmarks[1][9];
@@ -418,7 +410,6 @@
             mouse.y = -(e.clientY/window.innerHeight)*2+1;
         });
 
-        // Handle touch as mouse for mobile
         window.addEventListener('touchmove', e => {
             if(e.touches.length > 0) {
                 mouse.x = (e.touches[0].clientX/window.innerWidth)*2-1;
@@ -426,9 +417,7 @@
             }
         });
 
-        // Launch
         init();
     </script>
 </body>
 </html>
-
