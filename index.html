@@ -24,19 +24,18 @@
             z-index: 100;
             width: 90%;
             max-width: 350px;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(10, 10, 10, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 24px;
             padding: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            pointer-events: auto;
         }
 
         #ai-hub.minimized {
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             padding: 0;
             border-radius: 50%;
             display: flex;
@@ -45,16 +44,16 @@
             cursor: pointer;
         }
         #ai-hub.minimized .hub-content { display: none; }
-        #ai-hub.minimized .hub-icon { display: block; font-size: 22px; animation: glow 2s infinite; }
+        #ai-hub.minimized .hub-icon { display: block; font-size: 24px; animation: glow 2s infinite; }
         #ai-hub:not(.minimized) .hub-icon { display: none; }
 
-        .hub-content h2 { margin: 0 0 12px 0; font-size: 0.85rem; text-transform: uppercase; color: #aaa; letter-spacing: 1.5px; display: flex; justify-content: space-between; align-items: center; }
-        .close-btn { cursor: pointer; color: #666; font-size: 20px; padding: 5px; }
+        .hub-content h2 { margin: 0 0 12px 0; font-size: 0.85rem; text-transform: uppercase; color: #888; letter-spacing: 1.5px; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { cursor: pointer; color: #fff; font-size: 22px; padding: 5px; }
 
         #ai-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             padding: 12px;
             border-radius: 12px;
@@ -66,19 +65,19 @@
 
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .hub-btn {
-            padding: 10px;
+            padding: 12px;
             border: none;
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: bold;
             color: white;
             font-size: 0.75rem;
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .hub-btn:active { transform: scale(0.96); }
+        .hub-btn:active { transform: scale(0.95); }
         .btn-ai-shape { background: linear-gradient(135deg, #6366f1, #a855f7); }
         .btn-ai-vibe { background: linear-gradient(135deg, #06b6d4, #10b981); }
-        .btn-util { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .btn-util { background: rgba(255, 255, 255, 0.15); }
 
         #cam-preview {
             position: absolute;
@@ -86,7 +85,7 @@
             right: 15px;
             width: 110px;
             height: 82px;
-            background: #000;
+            background: #111;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
@@ -99,19 +98,21 @@
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(5px);
-            padding: 6px 14px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             z-index: 50;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         @keyframes glow {
             0%, 100% { text-shadow: 0 0 10px #a855f7; transform: scale(1); }
-            50% { text-shadow: 0 0 20px #6366f1; transform: scale(1.1); }
+            50% { text-shadow: 0 0 25px #6366f1; transform: scale(1.1); }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -123,21 +124,21 @@
     <div id="status-pill">Sphere</div>
 
     <div id="cam-preview">
-        <video id="input-video" playsinline></video>
+        <video id="input-video" playsinline autoplay muted></video>
     </div>
 
     <div id="ai-hub" class="minimized" onclick="expandHub(event)">
         <div class="hub-icon">✨</div>
         <div class="hub-content">
             <h2>AI Control <span class="close-btn" onclick="shrinkHub(event)">✕</span></h2>
-            <input type="text" id="ai-input" placeholder="e.g. Spiral Galaxy" onclick="event.stopPropagation()">
+            <input type="text" id="ai-input" placeholder="e.g. DNA Strand" onclick="event.stopPropagation()">
             <div class="btn-grid">
                 <button class="hub-btn btn-ai-shape" onclick="generateAI('shape', event)">Dream Shape</button>
                 <button class="hub-btn btn-ai-vibe" onclick="generateAI('vibe', event)">Dream Vibe</button>
                 <button class="hub-btn btn-util" onclick="nextShape(event)">Next Shape</button>
                 <button class="hub-btn btn-util" onclick="saveSnapshot(event)">📷 Snapshot</button>
             </div>
-            <div id="ai-status" style="font-size: 9px; color: #555; margin-top: 10px; text-align: center;">👌 PINCH TO CYCLE</div>
+            <div id="ai-status" style="font-size: 10px; color: #888; margin-top: 10px; text-align: center;">👌 PINCH TO CHANGE</div>
         </div>
     </div>
 
@@ -147,7 +148,7 @@
         const PARTICLE_COUNT = 15000;
         const apiKey = ""; 
         const INTERACTION_RADIUS = 30;
-        const PINCH_THRESHOLD = 0.05;
+        const PINCH_THRESHOLD = 0.06;
         
         let scene, camera, renderer, particles, geometry;
         let targetPositions = new Float32Array(PARTICLE_COUNT * 3);
@@ -156,11 +157,11 @@
         let time = 0;
         let expansionFactor = 1.0;
         
-        // Pinch State
         let isPinching = false;
         let lastPinchTime = 0;
 
-        const mouse = new THREE.Vector2();
+        // Interaction coordinates (defaults to center to prevent NaN)
+        const mouse = new THREE.Vector2(0,0);
         const handPos = new THREE.Vector3(0,0,0);
         let isHandDetected = false;
 
@@ -189,12 +190,13 @@
                     return { x: r * Math.cos(theta), y: (Math.random()-0.5)*2, z: r * Math.sin(theta) };
                 }
             }},
-            { name: "DNA", func: (i, t) => {
+            { name: "DNA Helix", func: (i, t) => {
                 const y = (i/t - 0.5) * 40;
                 const r = 10;
                 const off = (i % 2 === 0) ? 0 : Math.PI;
                 return { x: r * Math.cos(i*0.1 + off), y: y, z: r * Math.sin(i*0.1 + off) };
-            }}
+            }},
+            { name: "Cube", func: (i, t) => ({ x: (Math.random()-0.5)*30, y: (Math.random()-0.5)*30, z: (Math.random()-0.5)*30 })}
         ];
 
         function expandHub(e) {
@@ -221,7 +223,12 @@
             const col = new Float32Array(PARTICLE_COUNT * 3);
 
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const color = new THREE.Color().setHSL(i/PARTICLE_COUNT, 0.9, 0.6);
+                // Random start
+                pos[i*3] = (Math.random()-0.5)*100;
+                pos[i*3+1] = (Math.random()-0.5)*100;
+                pos[i*3+2] = (Math.random()-0.5)*100;
+                
+                const color = new THREE.Color().setHSL(i/PARTICLE_COUNT, 1.0, 0.7);
                 col[i*3] = color.r; col[i*3+1] = color.g; col[i*3+2] = color.b;
             }
 
@@ -229,12 +236,12 @@
             geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
             const material = new THREE.PointsMaterial({ 
-                size: 0.7, 
+                size: 0.8, 
                 map: generateSprite(),
                 vertexColors: true, 
                 blending: THREE.AdditiveBlending, 
                 transparent: true, 
-                opacity: 0.9,
+                opacity: 0.95,
                 depthWrite: false
             });
 
@@ -252,6 +259,7 @@
             const ctx = canvas.getContext('2d');
             const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
             grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.2, 'rgba(255,255,255,0.8)');
             grad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
             grad.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
@@ -266,24 +274,33 @@
             document.getElementById('status-pill').innerText = shape.name;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const p = shape.func(i, PARTICLE_COUNT);
-                targetPositions[i*3] = p.x; targetPositions[i*3+1] = p.y; targetPositions[i*3+2] = p.z;
+                targetPositions[i*3] = p.x; 
+                targetPositions[i*3+1] = p.y; 
+                targetPositions[i*3+2] = p.z;
             }
         }
 
         function animate() {
             requestAnimationFrame(animate);
             time += timeSpeed;
-            const posArr = geometry.attributes.position.array;
-            let attractor = isHandDetected ? handPos : new THREE.Vector3(mouse.x*35, mouse.y*35, 0);
+            const posAttr = geometry.attributes.position;
+            const arr = posAttr.array;
+
+            // Target Point for interaction
+            let attractor = isHandDetected ? handPos : new THREE.Vector3(mouse.x*40, mouse.y*40, 0);
 
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const idx = i*3;
+                
+                // Rotational movement
                 const cosT = Math.cos(time * 0.2);
                 const sinT = Math.sin(time * 0.2);
+                
                 let tx = (targetPositions[idx] * cosT - targetPositions[idx+2] * sinT) * expansionFactor;
                 let ty = targetPositions[idx+1] * expansionFactor;
                 let tz = (targetPositions[idx] * sinT + targetPositions[idx+2] * cosT) * expansionFactor;
 
+                // Physics logic
                 const dx = attractor.x - arr[idx];
                 const dy = attractor.y - arr[idx+1];
                 const dz = attractor.z - arr[idx+2];
@@ -291,62 +308,66 @@
 
                 let fx = 0, fy = 0, fz = 0;
                 if(distSq < INTERACTION_RADIUS * INTERACTION_RADIUS) {
-                    const force = (INTERACTION_RADIUS - Math.sqrt(distSq)) / INTERACTION_RADIUS;
-                    fx = -dx * force * 0.15 + dy * force * 0.2; 
-                    fy = -dy * force * 0.15 - dx * force * 0.2;
-                    fz = -dz * force * 0.15;
+                    const dist = Math.sqrt(distSq);
+                    const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
+                    // Attraction + Swirl
+                    fx = -dx * force * 0.2 + dy * force * 0.2; 
+                    fy = -dy * force * 0.2 - dx * force * 0.2;
+                    fz = -dz * force * 0.2;
                 }
 
+                // Smooth movement towards target
                 arr[idx] += (tx - arr[idx] + fx) * 0.05;
                 arr[idx+1] += (ty - arr[idx+1] + fy) * 0.05;
                 arr[idx+2] += (tz - arr[idx+2] + fz) * 0.05;
             }
-            geometry.attributes.position.needsUpdate = true;
+            posAttr.needsUpdate = true;
             renderer.render(scene, camera);
         }
 
         async function initCamera() {
             const video = document.getElementById('input-video');
-            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
-            
-            hands.onResults(res => {
-                isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
-                if(isHandDetected) {
-                    const landmarks = res.multiHandLandmarks[0];
-                    const indexTip = landmarks[8];
-                    const thumbTip = landmarks[4];
-                    
-                    // Tracking Position
-                    handPos.set((0.5 - indexTip.x) * 60, (0.5 - indexTip.y) * 60, 0);
+            try {
+                const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+                hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
+                
+                hands.onResults(res => {
+                    isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
+                    if(isHandDetected) {
+                        const landmarks = res.multiHandLandmarks[0];
+                        const indexTip = landmarks[8];
+                        const thumbTip = landmarks[4];
+                        
+                        handPos.set((0.5 - indexTip.x) * 70, (0.5 - indexTip.y) * 70, 0);
 
-                    // --- PINCH DETECTION ---
-                    const dist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
-                    if (dist < PINCH_THRESHOLD) {
-                        if (!isPinching && Date.now() - lastPinchTime > 800) {
-                            isPinching = true;
-                            lastPinchTime = Date.now();
-                            nextShape();
+                        // Pinch Detection
+                        const d = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+                        if (d < PINCH_THRESHOLD) {
+                            if (!isPinching && Date.now() - lastPinchTime > 1000) {
+                                isPinching = true;
+                                lastPinchTime = Date.now();
+                                nextShape();
+                            }
+                        } else {
+                            isPinching = false;
+                        }
+
+                        // Expansion
+                        if(res.multiHandLandmarks.length === 2) {
+                            const h1 = res.multiHandLandmarks[0][9];
+                            const h2 = res.multiHandLandmarks[1][9];
+                            expansionFactor = 0.5 + Math.hypot(h1.x - h2.x, h1.y - h2.y) * 3;
+                        } else {
+                            expansionFactor += (1.0 - expansionFactor) * 0.05;
                         }
                     } else {
-                        isPinching = false;
+                        expansionFactor += (1.0 - expansionFactor) * 0.05;
                     }
+                });
 
-                    // --- TWO HAND EXPANSION ---
-                    if(res.multiHandLandmarks.length === 2) {
-                        const h1 = res.multiHandLandmarks[0][9];
-                        const h2 = res.multiHandLandmarks[1][9];
-                        expansionFactor = 0.5 + Math.hypot(h1.x - h2.x, h1.y - h2.y) * 2.5;
-                    } else {
-                        expansionFactor += (1.0 - expansionFactor) * 0.1;
-                    }
-                } else {
-                    expansionFactor += (1.0 - expansionFactor) * 0.1;
-                }
-            });
-
-            const cam = new Camera(video, { onFrame: async () => await hands.send({image: video}), width: 320, height: 240 });
-            cam.start();
+                const cam = new Camera(video, { onFrame: async () => await hands.send({image: video}), width: 320, height: 240 });
+                await cam.start();
+            } catch(e) { console.error("MediaPipe failed", e); }
         }
 
         function nextShape(e) { 
@@ -359,7 +380,7 @@
             const input = document.getElementById('ai-input').value;
             if(!input) return;
             const status = document.getElementById('ai-status');
-            status.innerText = "Thinking...";
+            status.innerText = "Dreaming...";
             
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
@@ -367,7 +388,7 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         contents: [{parts: [{text: input}]}],
-                        systemInstruction: {parts: [{text: type === 'shape' ? "Return ONLY JavaScript function body (i, total) returning {x,y,z} coords range -20 to 20." : "Return ONLY JSON {color1, color2, speed}."}]}
+                        systemInstruction: {parts: [{text: type === 'shape' ? "Return ONLY JavaScript function body (i, total) returning {x,y,z} range -25 to 25." : "Return ONLY JSON {color1, color2, speed}."}]}
                     })
                 });
                 const data = await res.json();
@@ -375,18 +396,19 @@
                 
                 if(type === 'shape') {
                     const func = new Function('i', 'total', text);
-                    shapes.push({name: input.substring(0,10), func});
+                    shapes.push({name: input.substring(0,12), func});
                     setShape(shapes.length - 1);
                 }
-                status.innerText = "Success!";
-            } catch(e) { status.innerText = "Error"; }
+                status.innerText = "Success! 👌";
+                setTimeout(() => status.innerText = "👌 PINCH TO CHANGE", 2000);
+            } catch(e) { status.innerText = "AI Error"; }
         }
 
         function saveSnapshot(e) {
             e.stopPropagation();
             renderer.render(scene, camera);
             const link = document.createElement('a');
-            link.download = 'holo.png';
+            link.download = 'holo-snapshot.png';
             link.href = renderer.domElement.toDataURL();
             link.click();
         }
@@ -396,6 +418,15 @@
             mouse.y = -(e.clientY/window.innerHeight)*2+1;
         });
 
+        // Handle touch as mouse for mobile
+        window.addEventListener('touchmove', e => {
+            if(e.touches.length > 0) {
+                mouse.x = (e.touches[0].clientX/window.innerWidth)*2-1;
+                mouse.y = -(e.touches[0].clientY/window.innerHeight)*2+1;
+            }
+        });
+
+        // Launch
         init();
     </script>
 </body>
