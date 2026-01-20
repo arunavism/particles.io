@@ -15,7 +15,6 @@
         }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* Collapsible AI Hub */
         #ai-hub {
             position: absolute;
             bottom: 20px;
@@ -131,7 +130,7 @@
         <div class="hub-icon">✨</div>
         <div class="hub-content">
             <h2>AI Control <span class="close-btn" onclick="shrinkHub(event)">✕</span></h2>
-            <input type="text" id="ai-input" placeholder="e.g. DNA Strand" onclick="event.stopPropagation()">
+            <input type="text" id="ai-input" placeholder="Describe something..." onclick="event.stopPropagation()">
             <div class="btn-grid">
                 <button class="hub-btn btn-ai-shape" onclick="generateAI('shape', event)">Dream Shape</button>
                 <button class="hub-btn btn-ai-vibe" onclick="generateAI('vibe', event)">Dream Vibe</button>
@@ -145,8 +144,9 @@
     <div id="canvas-container"></div>
 
     <script>
+        // --- CONSTANTS ---
         const PARTICLE_COUNT = 15000;
-        const apiKey = "AIzaSyDj8WUKv3x96u_yQ9vGoBrMpGodsCsvJK8"; 
+        const apiKey = "AIzaSyDj8WUKv3x96u_yQ9vGoBrMpGodsCsvJK8";
         const INTERACTION_RADIUS = 30;
         const PINCH_THRESHOLD = 0.06;
         
@@ -156,11 +156,9 @@
         let timeSpeed = 0.01;
         let time = 0;
         let expansionFactor = 1.0;
-        
         let isPinching = false;
         let lastPinchTime = 0;
 
-        // Interaction coordinates (defaults to center to prevent NaN)
         const mouse = new THREE.Vector2(0,0);
         const handPos = new THREE.Vector3(0,0,0);
         let isHandDetected = false;
@@ -189,30 +187,97 @@
                     const theta = Math.random() * Math.PI * 2;
                     return { x: r * Math.cos(theta), y: (Math.random()-0.5)*2, z: r * Math.sin(theta) };
                 }
-            }},
-            { name: "DNA Helix", func: (i, t) => {
-                const y = (i/t - 0.5) * 40;
-                const r = 10;
-                const off = (i % 2 === 0) ? 0 : Math.PI;
-                return { x: r * Math.cos(i*0.1 + off), y: y, z: r * Math.sin(i*0.1 + off) };
-            }},
-            { name: "Cube", func: (i, t) => ({ x: (Math.random()-0.5)*30, y: (Math.random()-0.5)*30, z: (Math.random()-0.5)*30 })}
+            }}
         ];
 
-        function expandHub(e) {
-            const hub = document.getElementById('ai-hub');
-            if(hub.classList.contains('minimized')) hub.classList.remove('minimized');
-        }
-        function shrinkHub(e) {
-            if(e) e.stopPropagation();
-            document.getElementById('ai-hub').classList.add('minimized');
+        // --- UI UTILS ---
+        function expandHub(e) { document.getElementById('ai-hub').classList.remove('minimized'); }
+        function shrinkHub(e) { e.stopPropagation(); document.getElementById('ai-hub').classList.add('minimized'); }
+
+        // --- API CALL WITH EXPONENTIAL BACKOFF ---
+        async function fetchGeminiWithBackoff(payload) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const maxRetries = 5;
+            
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) return await response.json();
+                    
+                    if (response.status === 429 || response.status >= 500) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    
+                    if (response.status === 403) throw new Error("Invalid API Key");
+                    throw new Error(`HTTP ${response.status}`);
+                } catch (err) {
+                    if (i === maxRetries - 1) throw err;
+                }
+            }
         }
 
+        async function generateAI(type, e) {
+            if (e) e.stopPropagation();
+            if (!apiKey) {
+                updateAIStatus("No API Key Found", "#ff4444");
+                return;
+            }
+
+            const input = document.getElementById('ai-input').value;
+            if (!input) return;
+            
+            updateAIStatus("AI is thinking...", "#6366f1");
+
+            const systemPrompt = type === 'shape' 
+                ? "Return ONLY the body of a JavaScript function (i, total) that returns {x, y, z}. Coords should be -25 to 25. No markdown."
+                : "Return ONLY JSON {color1: hex, color2: hex, speed: float}. No markdown.";
+
+            const payload = {
+                contents: [{ parts: [{ text: input }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const data = await fetchGeminiWithBackoff(payload);
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```javascript|```|json/g, '').trim();
+                
+                if (!text) throw new Error("Empty Response");
+
+                if (type === 'shape') {
+                    const func = new Function('i', 'total', text);
+                    shapes.push({ name: input.substring(0, 10), func });
+                    setShape(shapes.length - 1);
+                } else {
+                    const vibe = JSON.parse(text);
+                    updateColors(vibe.color1, vibe.color2);
+                    if (vibe.speed) timeSpeed = vibe.speed;
+                }
+                updateAIStatus("Success! 👌", "#10b981");
+                setTimeout(() => updateAIStatus("👌 PINCH TO CHANGE", "#888"), 3000);
+            } catch (err) {
+                console.error(err);
+                updateAIStatus(err.message === "Invalid API Key" ? "Check API Key" : "AI Error", "#ff4444");
+            }
+        }
+
+        function updateAIStatus(msg, color) {
+            const el = document.getElementById('ai-status');
+            el.innerText = msg;
+            el.style.color = color;
+        }
+
+        // --- THREE.JS ENGINE ---
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 50;
-
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -221,29 +286,15 @@
             geometry = new THREE.BufferGeometry();
             const pos = new Float32Array(PARTICLE_COUNT * 3);
             const col = new Float32Array(PARTICLE_COUNT * 3);
-
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 pos[i*3] = (Math.random()-0.5)*100;
-                pos[i*3+1] = (Math.random()-0.5)*100;
-                pos[i*3+2] = (Math.random()-0.5)*100;
-                
                 const color = new THREE.Color().setHSL(i/PARTICLE_COUNT, 1.0, 0.7);
                 col[i*3] = color.r; col[i*3+1] = color.g; col[i*3+2] = color.b;
             }
-
             geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
-            const material = new THREE.PointsMaterial({ 
-                size: 0.8, 
-                map: generateSprite(),
-                vertexColors: true, 
-                blending: THREE.AdditiveBlending, 
-                transparent: true, 
-                opacity: 0.95,
-                depthWrite: false
-            });
-
+            const material = new THREE.PointsMaterial({ size: 0.8, map: generateSprite(), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.95, depthWrite: false });
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
 
@@ -257,14 +308,9 @@
             canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
             const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-            grad.addColorStop(0, 'rgba(255,255,255,1)');
-            grad.addColorStop(0.2, 'rgba(255,255,255,0.8)');
-            grad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            grad.addColorStop(0, 'white'); grad.addColorStop(0.5, 'rgba(255,255,255,0.2)'); grad.addColorStop(1, 'transparent');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
-            const tex = new THREE.Texture(canvas);
-            tex.needsUpdate = true;
-            return tex;
+            const tex = new THREE.Texture(canvas); tex.needsUpdate = true; return tex;
         }
 
         function setShape(idx) {
@@ -273,49 +319,32 @@
             document.getElementById('status-pill').innerText = shape.name;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const p = shape.func(i, PARTICLE_COUNT);
-                targetPositions[i*3] = p.x; 
-                targetPositions[i*3+1] = p.y; 
-                targetPositions[i*3+2] = p.z;
+                targetPositions[i*3] = p.x; targetPositions[i*3+1] = p.y; targetPositions[i*3+2] = p.z;
             }
         }
 
         function animate() {
             requestAnimationFrame(animate);
             time += timeSpeed;
-            const posAttr = geometry.attributes.position;
-            const arr = posAttr.array;
-
+            const arr = geometry.attributes.position.array;
             let attractor = isHandDetected ? handPos : new THREE.Vector3(mouse.x*40, mouse.y*40, 0);
 
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const idx = i*3;
-                
-                const cosT = Math.cos(time * 0.2);
-                const sinT = Math.sin(time * 0.2);
-                
+                const cosT = Math.cos(time * 0.2); const sinT = Math.sin(time * 0.2);
                 let tx = (targetPositions[idx] * cosT - targetPositions[idx+2] * sinT) * expansionFactor;
                 let ty = targetPositions[idx+1] * expansionFactor;
                 let tz = (targetPositions[idx] * sinT + targetPositions[idx+2] * cosT) * expansionFactor;
-
-                const dx = attractor.x - arr[idx];
-                const dy = attractor.y - arr[idx+1];
-                const dz = attractor.z - arr[idx+2];
+                const dx = attractor.x - arr[idx]; const dy = attractor.y - arr[idx+1]; const dz = attractor.z - arr[idx+2];
                 const distSq = dx*dx + dy*dy + dz*dz;
-
                 let fx = 0, fy = 0, fz = 0;
-                if(distSq < INTERACTION_RADIUS * INTERACTION_RADIUS) {
-                    const dist = Math.sqrt(distSq);
-                    const force = (INTERACTION_RADIUS - dist) / INTERACTION_RADIUS;
-                    fx = -dx * force * 0.2 + dy * force * 0.2; 
-                    fy = -dy * force * 0.2 - dx * force * 0.2;
-                    fz = -dz * force * 0.2;
+                if(distSq < 900) {
+                    const d = Math.sqrt(distSq); const f = (30 - d) / 30;
+                    fx = -dx * f * 0.2 + dy * f * 0.2; fy = -dy * f * 0.2 - dx * f * 0.2; fz = -dz * f * 0.2;
                 }
-
-                arr[idx] += (tx - arr[idx] + fx) * 0.05;
-                arr[idx+1] += (ty - arr[idx+1] + fy) * 0.05;
-                arr[idx+2] += (tz - arr[idx+2] + fz) * 0.05;
+                arr[idx] += (tx - arr[idx] + fx) * 0.05; arr[idx+1] += (ty - arr[idx+1] + fy) * 0.05; arr[idx+2] += (tz - arr[idx+2] + fz) * 0.05;
             }
-            posAttr.needsUpdate = true;
+            geometry.attributes.position.needsUpdate = true;
             renderer.render(scene, camera);
         }
 
@@ -324,100 +353,44 @@
             try {
                 const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
                 hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
-                
                 hands.onResults(res => {
                     isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
                     if(isHandDetected) {
-                        const landmarks = res.multiHandLandmarks[0];
-                        const indexTip = landmarks[8];
-                        const thumbTip = landmarks[4];
-                        
-                        handPos.set((0.5 - indexTip.x) * 70, (0.5 - indexTip.y) * 70, 0);
-
-                        const d = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+                        const marks = res.multiHandLandmarks[0];
+                        handPos.set((0.5 - marks[8].x) * 70, (0.5 - marks[8].y) * 70, 0);
+                        const d = Math.hypot(marks[8].x - marks[4].x, marks[8].y - marks[4].y);
                         if (d < PINCH_THRESHOLD) {
                             if (!isPinching && Date.now() - lastPinchTime > 1000) {
-                                isPinching = true;
-                                lastPinchTime = Date.now();
-                                nextShape();
+                                isPinching = true; lastPinchTime = Date.now(); nextShape();
                             }
-                        } else {
-                            isPinching = false;
-                        }
-
+                        } else isPinching = false;
                         if(res.multiHandLandmarks.length === 2) {
-                            const h1 = res.multiHandLandmarks[0][9];
-                            const h2 = res.multiHandLandmarks[1][9];
+                            const h1 = res.multiHandLandmarks[0][9]; const h2 = res.multiHandLandmarks[1][9];
                             expansionFactor = 0.5 + Math.hypot(h1.x - h2.x, h1.y - h2.y) * 3;
-                        } else {
-                            expansionFactor += (1.0 - expansionFactor) * 0.05;
-                        }
-                    } else {
-                        expansionFactor += (1.0 - expansionFactor) * 0.05;
-                    }
+                        } else expansionFactor += (1.0 - expansionFactor) * 0.05;
+                    } else expansionFactor += (1.0 - expansionFactor) * 0.05;
                 });
-
                 const cam = new Camera(video, { onFrame: async () => await hands.send({image: video}), width: 320, height: 240 });
                 await cam.start();
-            } catch(e) { console.error("MediaPipe failed", e); }
+            } catch(e) {}
         }
 
-        function nextShape(e) { 
-            if(e) e.stopPropagation(); 
-            setShape((currentShapeIndex + 1) % shapes.length); 
-        }
-
-        async function generateAI(type, e) {
-            e.stopPropagation();
-            const input = document.getElementById('ai-input').value;
-            if(!input) return;
-            const status = document.getElementById('ai-status');
-            status.innerText = "Dreaming...";
-            
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{parts: [{text: input}]}],
-                        systemInstruction: {parts: [{text: type === 'shape' ? "Return ONLY JavaScript function body (i, total) returning {x,y,z} range -25 to 25." : "Return ONLY JSON {color1, color2, speed}."}]}
-                    })
-                });
-                const data = await res.json();
-                const text = data.candidates[0].content.parts[0].text.replace(/```javascript|```|json/g, '').trim();
-                
-                if(type === 'shape') {
-                    const func = new Function('i', 'total', text);
-                    shapes.push({name: input.substring(0,12), func});
-                    setShape(shapes.length - 1);
-                }
-                status.innerText = "Success! 👌";
-                setTimeout(() => status.innerText = "👌 PINCH TO CHANGE", 2000);
-            } catch(e) { status.innerText = "AI Error"; }
-        }
-
-        function saveSnapshot(e) {
-            e.stopPropagation();
-            renderer.render(scene, camera);
-            const link = document.createElement('a');
-            link.download = 'holo-snapshot.png';
-            link.href = renderer.domElement.toDataURL();
-            link.click();
-        }
-
-        window.addEventListener('mousemove', e => {
-            mouse.x = (e.clientX/window.innerWidth)*2-1;
-            mouse.y = -(e.clientY/window.innerHeight)*2+1;
-        });
-
-        window.addEventListener('touchmove', e => {
-            if(e.touches.length > 0) {
-                mouse.x = (e.touches[0].clientX/window.innerWidth)*2-1;
-                mouse.y = -(e.touches[0].clientY/window.innerHeight)*2+1;
+        function updateColors(c1, c2) {
+            const attr = geometry.attributes.color;
+            const ca = new THREE.Color(c1), cb = new THREE.Color(c2);
+            for(let i=0; i<PARTICLE_COUNT; i++) {
+                const m = ca.clone().lerp(cb, i/PARTICLE_COUNT);
+                attr.setXYZ(i, m.r, m.g, m.b);
             }
-        });
+            attr.needsUpdate = true;
+        }
 
+        function nextShape(e) { if(e) e.stopPropagation(); setShape((currentShapeIndex + 1) % shapes.length); }
+        function saveSnapshot(e) { e.stopPropagation(); renderer.render(scene, camera); const l = document.createElement('a'); l.download = 'holo.png'; l.href = renderer.domElement.toDataURL(); l.click(); }
+        window.addEventListener('mousemove', e => { mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1; });
+        window.addEventListener('touchmove', e => { if(e.touches.length > 0) { mouse.x = (e.touches[0].clientX/window.innerWidth)*2-1; mouse.y = -(e.touches[0].clientY/window.innerHeight)*2+1; } });
         init();
     </script>
 </body>
 </html>
+
