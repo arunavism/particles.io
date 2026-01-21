@@ -23,7 +23,7 @@
             z-index: 100;
             width: 92%;
             max-width: 360px;
-            background: rgba(12, 12, 12, 0.85);
+            background: rgba(12, 12, 12, 0.9);
             backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 28px;
@@ -62,14 +62,14 @@
         }
         #key-input {
             width: 100%;
-            background: rgba(255, 255, 0, 0.05);
-            border: 1px solid rgba(255, 255, 0, 0.2);
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid rgba(255, 255, 0, 0.3);
             color: #ff0;
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 12px;
-            font-size: 12px;
-            display: none; /* Toggle with key button */
+            font-size: 11px;
+            display: none;
         }
 
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -143,10 +143,10 @@
         <div class="hub-content">
             <h2>AI Control Center <span class="close-btn" onclick="shrinkHub(event)">✕</span></h2>
             
-            <input type="password" id="key-input" placeholder="Paste Gemini API Key here..." onchange="saveKey(this.value)">
+            <input type="password" id="key-input" placeholder="Paste your API Key here..." onchange="saveKey(this.value)">
             
             <div class="input-row">
-                <input type="text" id="ai-input" placeholder="e.g. DNA Helix" onclick="event.stopPropagation()">
+                <input type="text" id="ai-input" placeholder="e.g. Spiral Galaxy" onclick="event.stopPropagation()">
                 <button class="hub-btn btn-util" style="width: 50px; padding: 0;" onclick="toggleKeyInput(event)">🔑</button>
             </div>
 
@@ -154,9 +154,9 @@
                 <button id="btn-shape" class="hub-btn btn-ai-shape" onclick="generateAI('shape', event)">Dream Shape</button>
                 <button id="btn-vibe" class="hub-btn btn-ai-vibe" onclick="generateAI('vibe', event)">Dream Vibe</button>
                 <button class="hub-btn btn-util" onclick="nextShape(event)">Next</button>
-                <button class="hub-btn btn-util" onclick="saveSnapshot(event)">📷 Snap</button>
+                <button class="hub-btn btn-util" onclick="saveSnapshot(event)">📷 Snapshot</button>
             </div>
-            <div id="ai-status" style="font-size: 9px; color: #666; margin-top: 12px; text-align: center;">👌 PINCH TO CHANGE</div>
+            <div id="ai-status" style="font-size: 10px; color: #666; margin-top: 12px; text-align: center;">ENTER KEY TO START AI</div>
         </div>
     </div>
 
@@ -210,52 +210,60 @@
         function saveKey(val) {
             userApiKey = val.trim();
             localStorage.setItem('gemini_api_key', userApiKey);
-            updateAIStatus("Key Saved Securely", "#ff0");
+            updateAIStatus("Key Saved!", "#ff0");
         }
 
         async function generateAI(type, e) {
             if (e) e.stopPropagation();
             if (!userApiKey) {
                 document.getElementById('key-input').style.display = 'block';
-                return updateAIStatus("Paste API Key first!", "#ff4444");
+                return updateAIStatus("Paste Key 🔑", "#ff4444");
             }
 
             const input = document.getElementById('ai-input').value;
             if (!input) return;
             
-            updateAIStatus("Dreaming...", "#6366f1");
+            updateAIStatus("AI thinking...", "#6366f1");
             const btn = type === 'shape' ? document.getElementById('btn-shape') : document.getElementById('btn-vibe');
             btn.disabled = true;
 
-            const systemPrompt = type === 'shape' 
-                ? "Return ONLY the JS function body (i, total) returning {x,y,z}. No markdown, no comments."
-                : "Return ONLY JSON {color1, color2, speed}. No markdown.";
+            // Simplified Instruction directly in content for better reliability
+            const instruction = type === 'shape' 
+                ? "Generate ONLY the body of a JavaScript function (i, total) that returns {x, y, z}. Coords range -25 to 25. No explanation, no markdown backticks, no 'javascript' tag."
+                : "Generate ONLY JSON {color1: hex, color2: hex, speed: float}. No markdown backticks.";
 
             const payload = {
-                contents: [{ parts: [{ text: `Prompt: ${input}` }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                safetySettings: [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ]
+                contents: [{ 
+                    parts: [{ text: `${instruction} \n\n User Prompt: ${input}` }] 
+                }],
+                generationConfig: { temperature: 0.4, maxOutputTokens: 300 }
             };
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`;
-                const response = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload) 
+                });
+                
                 const data = await response.json();
                 
-                if (data.error) throw new Error(data.error.message);
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
 
                 let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!text) throw new Error("Safety Block/Invalid Key");
+                if (!text) throw new Error("Safety Blocked prompt");
 
-                text = text.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+                // Aggressive cleaning of Markdown and comments
+                text = text.replace(/```[a-zA-Z]*\n?/g, '').replace(/```/g, '').trim();
+                text = text.replace(/^\s*function.*\{/, '').replace(/}\s*$/, ''); // Strip function wrapper if AI adds it
 
                 if (type === 'shape') {
                     const func = new Function('i', 'total', text);
+                    // Test the function once to see if it works before adding
+                    func(0, 100); 
                     shapes.push({ name: input.substring(0, 10).toUpperCase(), func });
                     setShape(shapes.length - 1);
                 } else {
@@ -263,13 +271,13 @@
                     if(vibe.color1 && vibe.color2) updateColors(vibe.color1, vibe.color2);
                     if(vibe.speed) timeSpeed = vibe.speed;
                 }
-                updateAIStatus("Dream Realized! 👌", "#10b981");
+                updateAIStatus("Dream Created! ✨", "#10b981");
             } catch (err) {
-                console.error(err);
-                updateAIStatus(err.message.includes("API_KEY_INVALID") ? "Key Disabled - Get New Key" : "AI Error", "#ff4444");
+                console.error("AI Error Detail:", err);
+                updateAIStatus("Check Console / AI Error", "#ff4444");
             } finally {
                 btn.disabled = false;
-                setTimeout(() => updateAIStatus("👌 PINCH TO CHANGE", "#666"), 3000);
+                setTimeout(() => updateAIStatus("👌 PINCH TO CHANGE", "#666"), 4000);
             }
         }
 
@@ -284,7 +292,7 @@
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 50;
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
@@ -299,7 +307,7 @@
             geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
-            const material = new THREE.PointsMaterial({ size: 0.8, map: generateSprite(), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.9, depthWrite: false });
+            const material = new THREE.PointsMaterial({ size: 0.85, map: generateSprite(), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.9, depthWrite: false });
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
 
@@ -355,7 +363,7 @@
         async function initCamera() {
             const v = document.getElementById('input-video');
             const h = new Hands({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-            h.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
+            h.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6 });
             h.onResults(res => {
                 isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
                 if(isHandDetected) {
@@ -389,8 +397,10 @@
 
         function nextShape(e) { if(e) e.stopPropagation(); setShape((currentShapeIndex + 1) % shapes.length); }
         function saveSnapshot(e) { e.stopPropagation(); renderer.render(scene, camera); const l = document.createElement('a'); l.download = 'holo.png'; l.href = renderer.domElement.toDataURL(); l.click(); }
+        
         window.addEventListener('mousemove', e => { mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1; });
         window.addEventListener('touchmove', e => { if(e.touches.length > 0) { mouse.x = (e.touches[0].clientX/window.innerWidth)*2-1; mouse.y = -(e.touches[0].clientY/window.innerHeight)*2+1; } });
+        
         init();
     </script>
 </body>
