@@ -21,20 +21,20 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            width: 90%;
-            max-width: 350px;
-            background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(20px);
+            width: 92%;
+            max-width: 360px;
+            background: rgba(12, 12, 12, 0.85);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px;
-            padding: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            border-radius: 28px;
+            padding: 18px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.9);
+            transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
         #ai-hub.minimized {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             padding: 0;
             border-radius: 50%;
             display: flex;
@@ -43,50 +43,61 @@
             cursor: pointer;
         }
         #ai-hub.minimized .hub-content { display: none; }
-        #ai-hub.minimized .hub-icon { display: block; font-size: 24px; animation: glow 2s infinite; }
+        #ai-hub.minimized .hub-icon { display: block; font-size: 26px; animation: glow 2.5s infinite; }
         #ai-hub:not(.minimized) .hub-icon { display: none; }
 
-        .hub-content h2 { margin: 0 0 12px 0; font-size: 0.85rem; text-transform: uppercase; color: #888; letter-spacing: 1.5px; display: flex; justify-content: space-between; align-items: center; }
-        .close-btn { cursor: pointer; color: #fff; font-size: 22px; padding: 5px; }
+        .hub-content h2 { margin: 0 0 15px 0; font-size: 0.8rem; text-transform: uppercase; color: #777; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { cursor: pointer; color: #fff; font-size: 24px; padding: 5px; opacity: 0.5; }
 
+        .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
         #ai-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: white;
             padding: 12px;
             border-radius: 12px;
-            margin-bottom: 12px;
             font-size: 16px;
-            box-sizing: border-box;
             outline: none;
         }
+        #key-input {
+            width: 100%;
+            background: rgba(255, 255, 0, 0.05);
+            border: 1px solid rgba(255, 255, 0, 0.2);
+            color: #ff0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            display: none; /* Toggle with key button */
+        }
 
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .hub-btn {
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 12px;
-            font-weight: bold;
+            border-radius: 14px;
+            font-weight: 800;
             color: white;
             font-size: 0.75rem;
             cursor: pointer;
             transition: transform 0.1s;
+            text-transform: uppercase;
         }
-        .hub-btn:active { transform: scale(0.95); }
+        .hub-btn:active { transform: scale(0.94); }
         .btn-ai-shape { background: linear-gradient(135deg, #6366f1, #a855f7); }
         .btn-ai-vibe { background: linear-gradient(135deg, #06b6d4, #10b981); }
-        .btn-util { background: rgba(255, 255, 255, 0.15); }
+        .btn-util { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255,255,255,0.05); }
 
         #cam-preview {
             position: absolute;
             top: 15px;
             right: 15px;
-            width: 110px;
-            height: 82px;
-            background: #111;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 115px;
+            height: 86px;
+            background: #000;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
             overflow: hidden;
             z-index: 50;
             transform: scaleX(-1);
@@ -98,20 +109,21 @@
             top: 15px;
             left: 15px;
             background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 20px;
+            backdrop-filter: blur(12px);
+            padding: 8px 18px;
+            border-radius: 25px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 900;
             z-index: 50;
             border: 1px solid rgba(255,255,255,0.2);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            color: cyan;
         }
 
         @keyframes glow {
-            0%, 100% { text-shadow: 0 0 10px #a855f7; transform: scale(1); }
-            50% { text-shadow: 0 0 25px #6366f1; transform: scale(1.1); }
+            0%, 100% { text-shadow: 0 0 15px #a855f7; transform: scale(1); }
+            50% { text-shadow: 0 0 30px #6366f1; transform: scale(1.15); }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -129,26 +141,33 @@
     <div id="ai-hub" class="minimized" onclick="expandHub(event)">
         <div class="hub-icon">✨</div>
         <div class="hub-content">
-            <h2>AI Control <span class="close-btn" onclick="shrinkHub(event)">✕</span></h2>
-            <input type="text" id="ai-input" placeholder="Describe something..." onclick="event.stopPropagation()">
-            <div class="btn-grid">
-                <button class="hub-btn btn-ai-shape" onclick="generateAI('shape', event)">Dream Shape</button>
-                <button class="hub-btn btn-ai-vibe" onclick="generateAI('vibe', event)">Dream Vibe</button>
-                <button class="hub-btn btn-util" onclick="nextShape(event)">Next Shape</button>
-                <button class="hub-btn btn-util" onclick="saveSnapshot(event)">📷 Snapshot</button>
+            <h2>AI Control Center <span class="close-btn" onclick="shrinkHub(event)">✕</span></h2>
+            
+            <input type="password" id="key-input" placeholder="Paste Gemini API Key here..." onchange="saveKey(this.value)">
+            
+            <div class="input-row">
+                <input type="text" id="ai-input" placeholder="e.g. DNA Helix" onclick="event.stopPropagation()">
+                <button class="hub-btn btn-util" style="width: 50px; padding: 0;" onclick="toggleKeyInput(event)">🔑</button>
             </div>
-            <div id="ai-status" style="font-size: 10px; color: #888; margin-top: 10px; text-align: center;">👌 PINCH TO CHANGE</div>
+
+            <div class="btn-grid">
+                <button id="btn-shape" class="hub-btn btn-ai-shape" onclick="generateAI('shape', event)">Dream Shape</button>
+                <button id="btn-vibe" class="hub-btn btn-ai-vibe" onclick="generateAI('vibe', event)">Dream Vibe</button>
+                <button class="hub-btn btn-util" onclick="nextShape(event)">Next</button>
+                <button class="hub-btn btn-util" onclick="saveSnapshot(event)">📷 Snap</button>
+            </div>
+            <div id="ai-status" style="font-size: 9px; color: #666; margin-top: 12px; text-align: center;">👌 PINCH TO CHANGE</div>
         </div>
     </div>
 
     <div id="canvas-container"></div>
 
     <script>
-        // --- CONSTANTS ---
         const PARTICLE_COUNT = 15000;
-        const apiKey = "AIzaSyBIZY_UcjMFtUuYSKBYCLVilR9AmFY3Ga8";
+        let userApiKey = localStorage.getItem('gemini_api_key') || "";
+        
         const INTERACTION_RADIUS = 30;
-        const PINCH_THRESHOLD = 0.06;
+        const PINCH_THRESHOLD = 0.05;
         
         let scene, camera, renderer, particles, geometry;
         let targetPositions = new Float32Array(PARTICLE_COUNT * 3);
@@ -175,105 +194,91 @@
                 const x = 16 * Math.pow(Math.sin(step), 3);
                 const y = 13 * Math.cos(step) - 5 * Math.cos(2*step) - 2 * Math.cos(3*step) - Math.cos(4*step);
                 return { x: x * 0.8, y: y * 0.8, z: (Math.random()-0.5)*5 };
-            }},
-            { name: "Saturn", func: (i, t) => {
-                if (i < t * 0.7) {
-                    const r = 12;
-                    const phi = Math.acos(-1 + (2 * i) / (t*0.7));
-                    const theta = Math.sqrt(t*0.7 * Math.PI) * phi;
-                    return { x: r * Math.cos(theta) * Math.sin(phi), y: r * Math.sin(theta) * Math.sin(phi), z: r * Math.cos(phi) };
-                } else {
-                    const r = 20 + Math.random() * 8;
-                    const theta = Math.random() * Math.PI * 2;
-                    return { x: r * Math.cos(theta), y: (Math.random()-0.5)*2, z: r * Math.sin(theta) };
-                }
             }}
         ];
 
-        // --- UI UTILS ---
         function expandHub(e) { document.getElementById('ai-hub').classList.remove('minimized'); }
         function shrinkHub(e) { e.stopPropagation(); document.getElementById('ai-hub').classList.add('minimized'); }
 
-        // --- API CALL WITH EXPONENTIAL BACKOFF ---
-        async function fetchGeminiWithBackoff(payload) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const maxRetries = 5;
-            
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    if (response.ok) return await response.json();
-                    
-                    if (response.status === 429 || response.status >= 500) {
-                        const delay = Math.pow(2, i) * 1000;
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        continue;
-                    }
-                    
-                    if (response.status === 403) throw new Error("Invalid API Key");
-                    throw new Error(`HTTP ${response.status}`);
-                } catch (err) {
-                    if (i === maxRetries - 1) throw err;
-                }
-            }
+        function toggleKeyInput(e) {
+            e.stopPropagation();
+            const el = document.getElementById('key-input');
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+            el.value = userApiKey;
+        }
+
+        function saveKey(val) {
+            userApiKey = val.trim();
+            localStorage.setItem('gemini_api_key', userApiKey);
+            updateAIStatus("Key Saved Securely", "#ff0");
         }
 
         async function generateAI(type, e) {
             if (e) e.stopPropagation();
-            if (!apiKey) {
-                updateAIStatus("No API Key Found", "#ff4444");
-                return;
+            if (!userApiKey) {
+                document.getElementById('key-input').style.display = 'block';
+                return updateAIStatus("Paste API Key first!", "#ff4444");
             }
 
             const input = document.getElementById('ai-input').value;
             if (!input) return;
             
-            updateAIStatus("AI is thinking...", "#6366f1");
+            updateAIStatus("Dreaming...", "#6366f1");
+            const btn = type === 'shape' ? document.getElementById('btn-shape') : document.getElementById('btn-vibe');
+            btn.disabled = true;
 
             const systemPrompt = type === 'shape' 
-                ? "Return ONLY the body of a JavaScript function (i, total) that returns {x, y, z}. Coords should be -25 to 25. No markdown."
-                : "Return ONLY JSON {color1: hex, color2: hex, speed: float}. No markdown.";
+                ? "Return ONLY the JS function body (i, total) returning {x,y,z}. No markdown, no comments."
+                : "Return ONLY JSON {color1, color2, speed}. No markdown.";
 
             const payload = {
-                contents: [{ parts: [{ text: input }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] }
+                contents: [{ parts: [{ text: `Prompt: ${input}` }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                ]
             };
 
             try {
-                const data = await fetchGeminiWithBackoff(payload);
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```javascript|```|json/g, '').trim();
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`;
+                const response = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await response.json();
                 
-                if (!text) throw new Error("Empty Response");
+                if (data.error) throw new Error(data.error.message);
+
+                let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("Safety Block/Invalid Key");
+
+                text = text.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
 
                 if (type === 'shape') {
                     const func = new Function('i', 'total', text);
-                    shapes.push({ name: input.substring(0, 10), func });
+                    shapes.push({ name: input.substring(0, 10).toUpperCase(), func });
                     setShape(shapes.length - 1);
                 } else {
                     const vibe = JSON.parse(text);
-                    updateColors(vibe.color1, vibe.color2);
-                    if (vibe.speed) timeSpeed = vibe.speed;
+                    if(vibe.color1 && vibe.color2) updateColors(vibe.color1, vibe.color2);
+                    if(vibe.speed) timeSpeed = vibe.speed;
                 }
-                updateAIStatus("Success! 👌", "#10b981");
-                setTimeout(() => updateAIStatus("👌 PINCH TO CHANGE", "#888"), 3000);
+                updateAIStatus("Dream Realized! 👌", "#10b981");
             } catch (err) {
                 console.error(err);
-                updateAIStatus(err.message === "Invalid API Key" ? "Check API Key" : "AI Error", "#ff4444");
+                updateAIStatus(err.message.includes("API_KEY_INVALID") ? "Key Disabled - Get New Key" : "AI Error", "#ff4444");
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => updateAIStatus("👌 PINCH TO CHANGE", "#666"), 3000);
             }
         }
 
         function updateAIStatus(msg, color) {
             const el = document.getElementById('ai-status');
-            el.innerText = msg;
-            el.style.color = color;
+            el.innerText = msg; el.style.color = color;
         }
 
-        // --- THREE.JS ENGINE ---
+        // --- ENGINE ---
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -294,7 +299,7 @@
             geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
-            const material = new THREE.PointsMaterial({ size: 0.8, map: generateSprite(), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.95, depthWrite: false });
+            const material = new THREE.PointsMaterial({ size: 0.8, map: generateSprite(), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.9, depthWrite: false });
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
 
@@ -304,21 +309,20 @@
         }
 
         function generateSprite() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 64; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-            grad.addColorStop(0, 'white'); grad.addColorStop(0.5, 'rgba(255,255,255,0.2)'); grad.addColorStop(1, 'transparent');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
-            const tex = new THREE.Texture(canvas); tex.needsUpdate = true; return tex;
+            const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            g.addColorStop(0, 'white'); g.addColorStop(0.3, 'rgba(255,255,255,0.7)'); g.addColorStop(1, 'transparent');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+            const t = new THREE.Texture(c); t.needsUpdate = true; return t;
         }
 
         function setShape(idx) {
             currentShapeIndex = idx;
-            const shape = shapes[idx];
-            document.getElementById('status-pill').innerText = shape.name;
+            const s = shapes[idx];
+            document.getElementById('status-pill').innerText = s.name;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const p = shape.func(i, PARTICLE_COUNT);
+                const p = s.func(i, PARTICLE_COUNT);
                 targetPositions[i*3] = p.x; targetPositions[i*3+1] = p.y; targetPositions[i*3+2] = p.z;
             }
         }
@@ -327,19 +331,19 @@
             requestAnimationFrame(animate);
             time += timeSpeed;
             const arr = geometry.attributes.position.array;
-            let attractor = isHandDetected ? handPos : new THREE.Vector3(mouse.x*40, mouse.y*40, 0);
+            let att = isHandDetected ? handPos : new THREE.Vector3(mouse.x*40, mouse.y*40, 0);
 
             for(let i=0; i<PARTICLE_COUNT; i++) {
                 const idx = i*3;
-                const cosT = Math.cos(time * 0.2); const sinT = Math.sin(time * 0.2);
-                let tx = (targetPositions[idx] * cosT - targetPositions[idx+2] * sinT) * expansionFactor;
+                const cT = Math.cos(time * 0.2), sT = Math.sin(time * 0.2);
+                let tx = (targetPositions[idx] * cT - targetPositions[idx+2] * sT) * expansionFactor;
                 let ty = targetPositions[idx+1] * expansionFactor;
-                let tz = (targetPositions[idx] * sinT + targetPositions[idx+2] * cosT) * expansionFactor;
-                const dx = attractor.x - arr[idx]; const dy = attractor.y - arr[idx+1]; const dz = attractor.z - arr[idx+2];
-                const distSq = dx*dx + dy*dy + dz*dz;
+                let tz = (targetPositions[idx] * sT + targetPositions[idx+2] * cT) * expansionFactor;
+                const dx = att.x - arr[idx], dy = att.y - arr[idx+1], dz = att.z - arr[idx+2];
+                const dSq = dx*dx + dy*dy + dz*dz;
                 let fx = 0, fy = 0, fz = 0;
-                if(distSq < 900) {
-                    const d = Math.sqrt(distSq); const f = (30 - d) / 30;
+                if(dSq < 1200) {
+                    const d = Math.sqrt(dSq), f = (35 - d) / 35;
                     fx = -dx * f * 0.2 + dy * f * 0.2; fy = -dy * f * 0.2 - dx * f * 0.2; fz = -dz * f * 0.2;
                 }
                 arr[idx] += (tx - arr[idx] + fx) * 0.05; arr[idx+1] += (ty - arr[idx+1] + fy) * 0.05; arr[idx+2] += (tz - arr[idx+2] + fz) * 0.05;
@@ -349,30 +353,28 @@
         }
 
         async function initCamera() {
-            const video = document.getElementById('input-video');
-            try {
-                const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-                hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
-                hands.onResults(res => {
-                    isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
-                    if(isHandDetected) {
-                        const marks = res.multiHandLandmarks[0];
-                        handPos.set((0.5 - marks[8].x) * 70, (0.5 - marks[8].y) * 70, 0);
-                        const d = Math.hypot(marks[8].x - marks[4].x, marks[8].y - marks[4].y);
-                        if (d < PINCH_THRESHOLD) {
-                            if (!isPinching && Date.now() - lastPinchTime > 1000) {
-                                isPinching = true; lastPinchTime = Date.now(); nextShape();
-                            }
-                        } else isPinching = false;
-                        if(res.multiHandLandmarks.length === 2) {
-                            const h1 = res.multiHandLandmarks[0][9]; const h2 = res.multiHandLandmarks[1][9];
-                            expansionFactor = 0.5 + Math.hypot(h1.x - h2.x, h1.y - h2.y) * 3;
-                        } else expansionFactor += (1.0 - expansionFactor) * 0.05;
-                    } else expansionFactor += (1.0 - expansionFactor) * 0.05;
-                });
-                const cam = new Camera(video, { onFrame: async () => await hands.send({image: video}), width: 320, height: 240 });
-                await cam.start();
-            } catch(e) {}
+            const v = document.getElementById('input-video');
+            const h = new Hands({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+            h.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5 });
+            h.onResults(res => {
+                isHandDetected = res.multiHandLandmarks && res.multiHandLandmarks.length > 0;
+                if(isHandDetected) {
+                    const m = res.multiHandLandmarks[0];
+                    handPos.set((0.5 - m[8].x) * 75, (0.5 - m[8].y) * 75, 0);
+                    const pD = Math.hypot(m[8].x - m[4].x, m[8].y - m[4].y);
+                    if (pD < PINCH_THRESHOLD) {
+                        if (!isPinching && Date.now() - lastPinchTime > 1200) {
+                            isPinching = true; lastPinchTime = Date.now(); nextShape();
+                        }
+                    } else isPinching = false;
+                    if(res.multiHandLandmarks.length === 2) {
+                        const h1 = res.multiHandLandmarks[0][9], h2 = res.multiHandLandmarks[1][9];
+                        expansionFactor = 0.5 + Math.hypot(h1.x - h2.x, h1.y - h2.y) * 3.5;
+                    } else expansionFactor += (1.0 - expansionFactor) * 0.06;
+                } else expansionFactor += (1.0 - expansionFactor) * 0.06;
+            });
+            const c = new Camera(v, { onFrame: async () => await h.send({image: v}), width: 480, height: 360 });
+            await c.start();
         }
 
         function updateColors(c1, c2) {
@@ -393,4 +395,3 @@
     </script>
 </body>
 </html>
-
